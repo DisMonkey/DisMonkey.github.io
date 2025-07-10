@@ -1,274 +1,417 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cruzada de Jesús Obrador De Milagros</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <style>
-    body {
-      margin: 0;
-      background-color: #000;
-      font-family: sans-serif;
-      color: #eee;
-      display: flex;
-      flex-wrap: nowrap;
-      height: 100vh;
-      overflow: hidden;
-    }
-    #left-panel, #right-panel {
-      width: 300px;
-      background-color: #111;
-      padding: 15px;
-      box-sizing: border-box;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      overflow-y: auto;
-      transition: all 0.3s ease;
-    }
-    #left-panel img, #right-panel img {
-      max-width: 100%;
-      height: auto;
-      margin-bottom: 15px;
-      border-radius: 8px;
-      box-shadow: 0 0 15px #222;
-      object-fit: contain;
-    }
-    #center-container {
-      flex-grow: 1;
-      display: flex;
-      flex-direction: column;
-      min-width: 600px;
-      position: relative;
-    }
-    h2 {
-      margin: 10px 0;
-      text-align: center;
-      color: #eee;
-    }
-    #map {
-      flex-grow: 1;
-      height: 100%;
-      touch-action: pan-x pan-y;
-    }
-    #contact {
-      color: #ccc;
-      text-align: center;
-      padding: 8px 0 15px 0;
-      font-weight: bold;
-      font-size: 1.1em;
-    }
-    a {
-      color: #1e90ff;
-      text-decoration: none;
-    }
-    a:hover {
-      text-decoration: underline;
-    }
-    #info-popup {
-      position: absolute;
-      background: rgba(20, 20, 20, 0.95);
-      border-radius: 12px;
-      box-shadow: 0 0 20px #000;
-      padding: 15px 20px 20px 20px;
-      max-width: 350px;
-      max-height: 400px;
-      overflow-y: auto;
-      color: #eee;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.4s ease;
-      z-index: 1000;
-      display: flex;
-      gap: 15px;
-      align-items: center;
-    }
-    #info-popup.visible {
-      opacity: 1;
-      pointer-events: auto;
-    }
-    #info-popup img {
-      max-width: 130px;
-      height: auto;
-      border-radius: 8px;
-      box-shadow: 0 0 15px #222;
-      flex-shrink: 0;
-    }
-    #info-popup .info-text {
-      flex-grow: 1;
-      line-height: 1.3;
-    }
-    #info-popup .info-text h3 {
-      margin: 0 0 8px 0;
-      font-size: 1.2em;
-    }
-    #info-popup .close-btn {
-      position: absolute;
-      top: 8px;
-      right: 12px;
-      cursor: pointer;
-      font-size: 20px;
-      font-weight: bold;
-      color: #ccc;
-      user-select: none;
-    }
-    #info-popup .close-btn:hover {
-      color: #fff;
-    }
-    @media (max-width: 1024px) {
-      #left-panel, #right-panel { width: 200px; padding: 10px; }
-      #center-container { min-width: 400px; }
-    }
-    @media (max-width: 768px) {
-      body { flex-wrap: wrap; }
-      #left-panel, #right-panel {
-        width: 100%;
-        height: auto;
-        padding: 10px 15px;
-        margin-bottom: 15px;
-      }
-      #right-panel img {
-        max-height: 200px;
-        object-fit: contain;
-      }
-      #center-container { min-width: auto; width: 100%; height: 60vh; order: 2; }
-      #left-panel { order: 1; }
-      #right-panel { order: 3; }
-      #map { height: 100%; min-height: 300px; }
-      h2 { font-size: 1.5em; }
-      #contact { font-size: 1em; }
-    }
-    @media (max-width: 480px) {
-      #left-panel, #right-panel { padding: 8px 10px; }
-      h2 { font-size: 1.2em; }
-      #contact { font-size: 0.9em; }
-      #info-popup { max-width: 90vw; max-height: 60vh; padding: 10px 15px 15px 15px; }
-      #info-popup img { max-width: 100px; }
-    }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cruzada de Jesús Obrador De Milagros</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700&display=swap" rel="stylesheet">
+
+<style>
+/* --- CSS Custom Properties (Theme) --- */
+:root {
+--bg-color: #0a0a0a;
+--panel-bg-color: #121212;
+--text-color: #e0e0e0;
+--text-muted-color: #a0a0a0;
+--accent-color: #d32f2f; /* A bold, reverent red */
+--link-color: #4dabf7;
+--shadow-color: rgba(0, 0, 0, 0.5);
+--font-main: 'Montserrat', sans-serif;
+}
+
+/* --- General Body & Layout --- */
+html {
+box-sizing: border-box;
+}
+*, *:before, *:after {
+box-sizing: inherit;
+}
+body {
+margin: 0;
+background-color: var(--bg-color);
+font-family: var(--font-main);
+color: var(--text-color);
+display: flex;
+height: 100vh;
+overflow: hidden;
+}
+
+/* --- Panels (Left & Right) --- */
+#left-panel, #right-panel {
+width: 320px;
+background-color: var(--panel-bg-color);
+padding: 20px;
+display: flex;
+flex-direction: column;
+align-items: center;
+overflow-y: auto;
+transition: width 0.3s ease;
+flex-shrink: 0;
+}
+#left-panel img, #right-panel img {
+max-width: 100%;
+height: auto;
+margin-bottom: 20px;
+border-radius: 12px;
+box-shadow: 0 8px 25px var(--shadow-color);
+object-fit: contain;
+}
+
+/* --- Center Content --- */
+#center-container {
+flex-grow: 1;
+display: flex;
+flex-direction: column;
+min-width: 500px;
+position: relative;
+}
+#top-bar {
+display: flex;
+justify-content: center;
+align-items: center;
+padding: 10px;
+background: var(--bg-color);
+}
+#page-title {
+margin: 0;
+padding: 0 20px;
+text-align: center;
+color: var(--text-color);
+font-weight: 700;
+font-size: 1.8em;
+flex-grow: 1;
+}
+#lang-toggle {
+padding: 8px 16px;
+border-radius: 8px;
+background: var(--panel-bg-color);
+color: var(--text-color);
+border: 1px solid #444;
+cursor: pointer;
+font-family: var(--font-main);
+transition: background-color 0.3s, color 0.3s;
+white-space: nowrap;
+}
+#lang-toggle:hover {
+background-color: #333;
+color: #fff;
+}
+
+/* --- Map & Contact --- */
+#map {
+flex-grow: 1;
+height: 100%;
+touch-action: pan-x pan-y;
+filter: grayscale(20%); /* Subtle desaturation for a more serious tone */
+}
+#contact {
+background: var(--panel-bg-color);
+color: var(--text-muted-color);
+text-align: center;
+padding: 15px;
+font-weight: 400;
+font-size: 0.95em;
+line-height: 1.6;
+}
+a {
+color: var(--link-color);
+text-decoration: none;
+transition: color 0.3s, text-decoration 0.3s;
+}
+a:hover {
+text-decoration: underline;
+color: #74c0fc;
+}
+
+/* --- Information Popup --- */
+#info-popup {
+position: absolute;
+background: rgba(25, 25, 25, 0.97);
+backdrop-filter: blur(5px);
+border-radius: 12px;
+border: 1px solid #333;
+box-shadow: 0 10px 30px var(--shadow-color);
+padding: 20px;
+width: 360px;
+opacity: 0;
+transform: scale(0.95);
+pointer-events: none;
+transition: opacity 0.3s ease, transform 0.3s ease;
+z-index: 1001; /* Above map controls */
+display: flex;
+gap: 15px;
+align-items: flex-start;
+}
+#info-popup.visible {
+opacity: 1;
+transform: scale(1);
+pointer-events: auto;
+}
+#info-popup img {
+max-width: 120px;
+height: auto;
+border-radius: 8px;
+flex-shrink: 0;
+}
+#info-popup .info-text {
+flex-grow: 1;
+line-height: 1.5;
+}
+#info-popup .info-text h3 {
+margin: 0 0 10px 0;
+font-size: 1.3em;
+font-weight: 700;
+}
+#info-popup .info-text p {
+margin: 0;
+font-size: 0.95em;
+}
+#info-popup .info-text .directions-link {
+display: inline-block;
+margin-top: 12px;
+padding: 8px 16px;
+background: var(--accent-color);
+color: #fff;
+border-radius: 6px;
+text-align: center;
+font-weight: bold;
+}
+#info-popup .info-text .directions-link:hover {
+background: #e53935;
+text-decoration: none;
+}
+#info-popup .close-btn {
+position: absolute;
+top: 10px;
+right: 15px;
+cursor: pointer;
+font-size: 28px;
+font-weight: 300;
+color: var(--text-muted-color);
+user-select: none;
+transition: color 0.3s;
+}
+#info-popup .close-btn:hover {
+color: #fff;
+}
+
+/* --- Custom Scrollbar --- */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: #1a1a1a; }
+::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #777; }
+
+/* --- Responsive Design --- */
+@media (max-width: 1200px) {
+#left-panel, #right-panel { width: 250px; }
+#center-container { min-width: 400px; }
+}
+@media (max-width: 992px) {
+body { flex-wrap: wrap; height: auto; overflow: auto; }
+#center-container { order: 1; width: 100%; height: 65vh; min-height: 450px; }
+#left-panel, #right-panel { order: 2; width: 50%; height: auto; }
+}
+@media (max-width: 768px) {
+#page-title { font-size: 1.4em; }
+#left-panel, #right-panel { width: 100%; }
+#left-panel { border-bottom: 1px solid #333; }
+#right-panel img { max-height: 250px; }
+#info-popup { max-width: 90vw; }
+}
+</style>
 </head>
 <body>
-  <div id="left-panel">
-    <img src="https://i.postimg.cc/L4bjKJj7/image.png" alt="Left Side Default Image" />
-  </div>
-  <div id="center-container">
-    <div style="text-align: center; margin-top: 10px;">
-      <button id="lang-toggle" style="padding: 6px 14px; border-radius: 8px; background: #222; color: #eee; border: 1px solid #555; cursor: pointer;">
-        Cambiar a Inglés
-      </button>
-    </div>
-    <h2 id="page-title">Cruzada de Jesús Obrador De Milagros</h2>
-    <div id="map"></div>
-    <div id="contact"></div>
-    <div id="info-popup" role="dialog" aria-modal="true" aria-labelledby="info-title" aria-describedby="info-desc">
-      <div class="close-btn" title="Close popup" tabindex="0">&times;</div>
-      <img src="" alt="" id="popup-image" />
-      <div class="info-text">
-        <h3 id="info-title"></h3>
-        <p id="info-desc"></p>
-      </div>
-    </div>
-  </div>
-  <div id="right-panel">
-    <img src="https://i.postimg.cc/JzmhTjZ9/image.png" alt="Pastor Juan Carlos Harrigan" />
-    <p id="campaign-host-text" style="color:#ccc; text-align:center; margin-top:8px; font-size:0.9em;">
-      Anfitrión de la campaña
-    </p>
-  </div>
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script>
-    let currentLang = "es";
+<div id="left-panel">
+<img src="https://i.postimg.cc/L4bjKJj7/image.png" alt="Cruzada de Milagros" />
+</div>
 
-    const langToggle = document.getElementById("lang-toggle");
-    const pageTitle = document.getElementById("page-title");
-    const contactDiv = document.getElementById("contact");
-    const infoPopup = document.getElementById('info-popup');
-    const popupImage = document.getElementById('popup-image');
-    const infoTitle = document.getElementById('info-title');
-    const infoDesc = document.getElementById('info-desc');
-    const closeBtn = infoPopup.querySelector('.close-btn');
-    const campaignHostText = document.getElementById("campaign-host-text");
+<div id="center-container">
+<div id="top-bar">
+<h2 id="page-title"></h2>
+<button id="lang-toggle"></button>
+</div>
+<div id="map"></div>
+<div id="contact"></div>
+<div id="info-popup" role="dialog" aria-modal="true" aria-labelledby="info-title" aria-describedby="info-desc">
+<span class="close-btn" title="Close" role="button" tabindex="0" aria-label="Close popup">&times;</span>
+<img src="" alt="" id="popup-image" />
+<div class="info-text">
+<h3 id="info-title"></h3>
+<p id="info-desc"></p>
+</div>
+</div>
+</div>
 
-    const crusades = [
-      { name: { en: "Toa Alta, Puerto Rico", es: "Toa Alta, Puerto Rico" }, coords: [18.37, -66.20], date: { en: "July 11", es: "11 de julio" }, time: "5:00 PM", image: "https://i.postimg.cc/cLZysLS7/image.png" },
-      { name: { en: "Miami, Florida", es: "Miami, Florida" }, coords: [25.77, -80.31], date: { en: "July 12", es: "12 de julio" }, time: "N/A", image: "https://i.postimg.cc/kg7Z0YQf/image.png" },
-      { name: { en: "Spartanburg, South Carolina", es: "Spartanburg, Carolina del Sur" }, coords: [34.95, -81.93], date: { en: "August 2", es: "2 de agosto" }, time: "7:00 AM", image: "https://i.postimg.cc/sXWwQ5PM/image.png" },
-      { name: { en: "Salem, Oregon", es: "Salem, Oregón" }, coords: [44.95, -123.01], date: { en: "August 15", es: "15 de agosto" }, time: "4:00 PM", image: "https://i.postimg.cc/GtrJ4Vhf/image.png" },
-      { name: { en: "Sacramento, California", es: "Sacramento, California" }, coords: [38.61, -121.44], date: { en: "August 22", es: "22 de agosto" }, time: "5:00 PM", image: "https://i.postimg.cc/qqkyJK1V/image.png" },
-      { name: { en: "Cali, Colombia", es: "Cali, Colombia" }, coords: [3.41, -76.55], date: { en: "September 19", es: "19 de septiembre" }, time: "4:00 PM", image: "https://i.postimg.cc/9Q4TQCYM/image.png" }
-    ];
+<div id="right-panel">
+<img src="https://i.postimg.cc/JzmhTjZ9/image.png" alt="Pastor Juan Carlos Harrigan" />
+<p id="campaign-host-text" style="color:var(--text-muted-color); text-align:center; margin-top:8px; font-size:0.9em;"></p>
+</div>
 
-    function updateContactSection() {
-      contactDiv.innerHTML = currentLang === "es" ?
-        `📞 Número de teléfono de la iglesia: <a href="tel:+19135493786">913-549-3786</a><br /><br />Redes Sociales del Pastor Juan Carlos Harrigan:<br /><a href="https://www.youtube.com/@JuanCarlosHarriganOficial" target="_blank">YouTube</a> | <a href="https://www.facebook.com/PastorJuanCarlosHarrigan" target="_blank">Facebook</a> | <a href="https://www.instagram.com/juancarlosharriganoficial/" target="_blank">Instagram</a> | <a href="https://www.tiktok.com/@pastorharriganoficial" target="_blank">TikTok</a>`
-        :
-        `📞 Church phone number: <a href="tel:+19135493786">913-549-3786</a><br /><br />Social Media of Pastor Juan Carlos Harrigan:<br /><a href="https://www.youtube.com/@JuanCarlosHarriganOficial" target="_blank">YouTube</a> | <a href="https://www.facebook.com/PastorJuanCarlosHarrigan" target="_blank">Facebook</a> | <a href="https://www.instagram.com/juancarlosharriganoficial/" target="_blank">Instagram</a> | <a href="https://www.tiktok.com/@pastorharriganoficial" target="_blank">TikTok</a>`;
-    }
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
 
-    function updateTexts() {
-      pageTitle.textContent = currentLang === "es" ? "Cruzada de Jesús Obrador De Milagros" : "Crusade of Jesus the Miracle Worker";
-      langToggle.textContent = currentLang === "es" ? "Switch to English" : "Cambiar a Español";
-      updateContactSection();
-      if (campaignHostText) {
-        campaignHostText.textContent = currentLang === "es" ? "Anfitrión de la campaña" : "Campaign Host";
-      }
-    }
+// --- DOM Element References ---
+const langToggle = document.getElementById("lang-toggle");
+const pageTitle = document.getElementById("page-title");
+const htmlEl = document.documentElement;
+const contactDiv = document.getElementById("contact");
+const campaignHostText = document.getElementById("campaign-host-text");
 
-    function showInfoPopup(c, latlng, index) {
-      popupImage.src = c.image;
-      popupImage.alt = c.name[currentLang];
-      infoTitle.textContent = c.name[currentLang];
+const infoPopup = document.getElementById('info-popup');
+const popupImage = document.getElementById('popup-image');
+const infoTitle = document.getElementById('info-title');
+const infoDesc = document.getElementById('info-desc');
+const closeBtn = infoPopup.querySelector('.close-btn');
+let lastFocusedElement;
 
-      const url = `https://www.google.com/maps/dir/?api=1&origin=${index > 0 ? crusades[index - 1].coords.join(',') : '18.377,-66.200'}&destination=${c.coords.join(',')}&travelmode=driving`;
-      const directionsText = currentLang === "es" ? "Obtener direcciones" : "Get Directions";
-      const labelDate = currentLang === "es" ? "Fecha" : "Date";
-      const labelTime = currentLang === "es" ? "Hora" : "Time";
+// --- State and Data ---
+let currentLang = "es";
+const translations = {
+es: {
+pageTitle: "Cruzada de Jesús Obrador De Milagros",
+toggleLang: "Switch to English",
+campaignHost: "Anfitrión de la campaña",
+contactIntro: '📞 Número de teléfono de la iglesia: <a href="tel:+19135493786">913-549-3786</a><br /><br />Redes Sociales del Pastor Juan Carlos Harrigan:',
+getDirections: "Obtener Direcciones",
+dateLabel: "Fecha",
+timeLabel: "Hora",
+pastorAlt: "Pastor Juan Carlos Harrigan",
+crusadeAlt: "Cruzada de Milagros"
+},
+en: {
+pageTitle: "Crusade of Jesus the Miracle Worker",
+toggleLang: "Cambiar a Español",
+campaignHost: "Campaign Host",
+contactIntro: '📞 Church phone number: <a href="tel:+19135493786">913-549-3786</a><br /><br />Social Media of Pastor Juan Carlos Harrigan:',
+getDirections: "Get Directions",
+dateLabel: "Date",
+timeLabel: "Time",
+pastorAlt: "Pastor Juan Carlos Harrigan",
+crusadeAlt: "Crusade of Miracles"
+}
+};
 
-      infoDesc.innerHTML = `${labelDate}: ${c.date[currentLang]}<br>${labelTime}: ${c.time}<br><a href="${url}" target="_blank" style="color:#1e90ff">${directionsText}</a>`;
+const crusades = [
+{ name: { en: "Toa Alta, Puerto Rico", es: "Toa Alta, Puerto Rico" }, coords: [18.37, -66.20], date: { en: "July 11", es: "11 de julio" }, time: "5:00 PM", image: "https://i.postimg.cc/cLZysLS7/image.png" },
+{ name: { en: "Miami, Florida", es: "Miami, Florida" }, coords: [25.77, -80.31], date: { en: "July 12", es: "12 de julio" }, time: "N/A", image: "https://i.postimg.cc/kg7Z0YQf/image.png" },
+{ name: { en: "Spartanburg, South Carolina", es: "Spartanburg, South Carolina" }, coords: [34.95, -81.93], date: { en: "August 2", es: "2 de agosto" }, time: "7:00 AM", image: "https://i.postimg.cc/sXWwQ5PM/image.png" },
+{ name: { en: "Salem, Oregon", es: "Salem, Oregón" }, coords: [44.95, -123.01], date: { en: "August 15", es: "15 de agosto" }, time: "4:00 PM", image: "https://i.postimg.cc/GtrJ4Vhf/image.png" },
+{ name: { en: "Sacramento, California", es: "Sacramento, California" }, coords: [38.61, -121.44], date: { en: "August 22", es: "22 de agosto" }, time: "5:00 PM", image: "https://i.postimg.cc/qqkyJK1V/image.png" },
+{ name: { en: "Cali, Colombia", es: "Cali, Colombia" }, coords: [3.41, -76.55], date: { en: "September 19", es: "19 de septiembre" }, time: "4:00 PM", image: "https://i.postimg.cc/9Q4TQCYM/image.png" }
+];
 
-      const containerPoint = map.latLngToContainerPoint(latlng);
-      const popupWidth = infoPopup.offsetWidth || 350;
-      const popupHeight = infoPopup.offsetHeight || 150;
-      let left = containerPoint.x + 20;
-      let top = containerPoint.y - popupHeight / 2;
-      top = Math.min(Math.max(top, 10), map.getSize().y - popupHeight - 10);
-      left = Math.min(left, map.getSize().x - popupWidth - 10);
-      infoPopup.style.left = left + "px";
-      infoPopup.style.top = top + "px";
-      infoPopup.classList.add("visible");
-    }
+// --- Map Initialization ---
+const map = L.map('map').setView([35, -80], 4);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+subdomains: 'abcd',
+maxZoom: 20
+}).addTo(map);
 
-    function hideInfoPopup() { infoPopup.classList.remove("visible"); }
+// --- Functions ---
+function updateLanguage() {
+const t = translations[currentLang];
+htmlEl.lang = currentLang;
+document.title = t.pageTitle;
+pageTitle.textContent = t.pageTitle;
+langToggle.textContent = t.toggleLang;
+campaignHostText.textContent = t.campaignHost;
+document.querySelector('#right-panel img').alt = t.pastorAlt;
+document.querySelector('#left-panel img').alt = t.crusadeAlt;
 
-    const map = L.map('map').setView([35, -80], 4);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
+const socialLinks = `<a href="https://www.youtube.com/@JuanCarlosHarrigan" target="_blank">YouTube</a> | <a href="https://www.facebook.com/PastorJuanCarlosHarrigan" target="_blank">Facebook</a> | <a href="https://www.instagram.com/juancarlosharriganoficial/" target="_blank">Instagram</a> | <a href="https://www.tiktok.com/@pastorharriganoficial" target="_blank">TikTok</a>`;
+contactDiv.innerHTML = `${t.contactIntro}<br />${socialLinks}`;
+}
 
-    const crossIcon = L.icon({ iconUrl: 'https://i.postimg.cc/MHZpLmp4/271d.png', iconSize: [32, 32], iconAnchor: [16, 32] });
+function showInfoPopup(crusade, latlng) {
+lastFocusedElement = document.activeElement;
+const t = translations[currentLang];
 
-    crusades.forEach((c, i) => {
-      const marker = L.marker(c.coords, { icon: crossIcon }).addTo(map);
-      marker.on('click', (e) => showInfoPopup(c, e.latlng, i));
-    });
+popupImage.src = crusade.image;
+popupImage.alt = crusade.name[currentLang];
+infoTitle.textContent = crusade.name[currentLang];
 
-    // Add polyline connecting all crusade points with nice red color
-    const crusadeCoords = crusades.map(c => c.coords);
-    const routeLine = L.polyline(crusadeCoords, { color: '#d32f2f', weight: 4, opacity: 0.8 }).addTo(map);
+// Corrected and user-friendly Google Maps URL
+const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${crusade.coords.join(',')}`;
 
-    // Zoom map to fit all crusades and the route
-    map.fitBounds(routeLine.getBounds());
+infoDesc.innerHTML = `
+<strong>${t.dateLabel}:</strong> ${crusade.date[currentLang]}<br>
+<strong>${t.timeLabel}:</strong> ${crusade.time}<br>
+<a href="${mapsUrl}" target="_blank" class="directions-link">${t.getDirections}</a>`;
 
-    closeBtn.addEventListener('click', hideInfoPopup);
-    closeBtn.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); hideInfoPopup(); }});
-    map.on('click', () => hideInfoPopup());
+// Smarter positioning
+const mapSize = map.getSize();
+const popupWidth = infoPopup.offsetWidth;
+const containerPoint = map.latLngToContainerPoint(latlng);
 
-    langToggle.addEventListener("click", () => {
-      currentLang = currentLang === "es" ? "en" : "es";
-      updateTexts();
-    });
+let left = containerPoint.x + 25; // Default to right of marker
+let top = containerPoint.y - (infoPopup.offsetHeight / 2);
 
-    updateTexts();
-  </script>
+// Adjust if it goes off-screen
+if (left + popupWidth > mapSize.x) {
+left = containerPoint.x - popupWidth - 25;
+}
+top = Math.max(10, Math.min(top, mapSize.y - infoPopup.offsetHeight - 10));
+
+infoPopup.style.left = `${left}px`;
+infoPopup.style.top = `${top}px`;
+infoPopup.classList.add("visible");
+closeBtn.focus();
+}
+
+function hideInfoPopup() {
+infoPopup.classList.remove("visible");
+if (lastFocusedElement) {
+lastFocusedElement.focus();
+}
+}
+
+// --- Map Features ---
+const crossIcon = L.icon({
+iconUrl: 'https://i.postimg.cc/MHZpLmp4/271d.png',
+iconSize: [32, 32],
+iconAnchor: [16, 16],
+popupAnchor: [0, -16]
+});
+
+crusades.forEach(c => {
+const marker = L.marker(c.coords, { icon: crossIcon, title: c.name[currentLang] }).addTo(map);
+marker.on('click', (e) => {
+L.DomEvent.stopPropagation(e); // Prevent map click from firing
+showInfoPopup(c, e.latlng);
+});
+});
+
+const crusadeCoords = crusades.map(c => c.coords);
+const routeLine = L.polyline(crusadeCoords, { color: 'var(--accent-color)', weight: 3, opacity: 0.7 }).addTo(map);
+map.fitBounds(routeLine.getBounds().pad(0.1));
+
+// --- Event Listeners ---
+langToggle.addEventListener("click", () => {
+currentLang = currentLang === "es" ? "en" : "es";
+updateLanguage();
+});
+
+closeBtn.addEventListener('click', hideInfoPopup);
+map.on('click keydown', hideInfoPopup);
+
+// Accessibility: Close popup with Escape key
+document.addEventListener('keydown', (e) => {
+if (e.key === 'Escape' && infoPopup.classList.contains('visible')) {
+hideInfoPopup();
+}
+});
+
+// --- Initial Load ---
+updateLanguage();
+
+});
+</script>
 </body>
 </html>
