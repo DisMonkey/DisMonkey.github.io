@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cruzada de Jesús Obrador De Milagros</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    body {
+      margin: 0;
+      background-color: #000;
+      font-family: sans-serif;
+      color: #eee;
+      display: flex;
+      flex-wrap: nowrap;
+      height: 100vh;
+      overflow: hidden;
+    }
+    #left-panel, #right-panel {
+      width: 300px;
+      background-color: #111;
+      padding: 15px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow-y: auto;
+      transition: all 0.3s ease;
+    }
+    #left-panel img, #right-panel img {
+      max-width: 100%;
+      height: auto;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      box-shadow: 0 0 15px #222;
+      object-fit: contain;
+    }
+    #center-container {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 600px;
+      position: relative;
+    }
+    h2 {
+      margin: 10px 0;
+      text-align: center;
+      color: #eee;
+    }
+    #map {
+      flex-grow: 1;
+      height: 100%;
+      touch-action: pan-x pan-y;
+    }
+    #contact {
+      color: #ccc;
+      text-align: center;
+      padding: 8px 0 15px 0;
+      font-weight: bold;
+      font-size: 1.1em;
+    }
+    a {
+      color: #1e90ff;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    #info-popup {
+      position: absolute;
+      background: rgba(20, 20, 20, 0.95);
+      border-radius: 12px;
+      box-shadow: 0 0 20px #000;
+      padding: 15px 20px 20px 20px;
+      max-width: 350px;
+      max-height: 400px;
+      overflow-y: auto;
+      color: #eee;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s ease;
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      align-items: center;
+    }
+    #info-popup.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    #info-popup img {
+      max-width: 130px;
+      height: auto;
+      border-radius: 8px;
+      box-shadow: 0 0 15px #222;
+      flex-shrink: 0;
+    }
+    #info-popup .info-text {
+      flex-grow: 1;
+      line-height: 1.3;
+    }
+    #info-popup .info-text h3 {
+      margin: 0 0 8px 0;
+      font-size: 1.2em;
+    }
+    #info-popup .close-btn {
+      position: absolute;
+      top: 8px;
+      right: 12px;
+      cursor: pointer;
+      font-size: 20px;
+      font-weight: bold;
+      color: #ccc;
+      user-select: none;
+    }
+    #info-popup .close-btn:hover {
+      color: #fff;
+    }
+    @media (max-width: 1024px) {
+      #left-panel, #right-panel { width: 200px; padding: 10px; }
+      #center-container { min-width: 400px; }
+    }
+    @media (max-width: 768px) {
+      body { flex-wrap: wrap; }
+      #left-panel, #right-panel { width: 100%; height: auto; padding: 10px 15px; }
+      #center-container { min-width: auto; width: 100%; height: 60vh; order: 2; }
+      #left-panel { order: 1; }
+      #right-panel { order: 3; }
+      #map { height: 100%; min-height: 300px; }
+      h2 { font-size: 1.5em; }
+      #contact { font-size: 1em; }
+    }
+    @media (max-width: 480px) {
+      #left-panel, #right-panel { padding: 8px 10px; }
+      h2 { font-size: 1.2em; }
+      #contact { font-size: 0.9em; }
+      #info-popup { max-width: 90vw; max-height: 60vh; padding: 10px 15px 15px 15px; }
+      #info-popup img { max-width: 100px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="left-panel">
+    <img src="https://i.postimg.cc/L4bjKJj7/image.png" alt="Left Side Default Image" />
+  </div>
+  <div id="center-container">
+    <div style="text-align: center; margin-top: 10px;">
+      <button id="lang-toggle" style="padding: 6px 14px; border-radius: 8px; background: #222; color: #eee; border: 1px solid #555; cursor: pointer;">
+        Cambiar a Inglés
+      </button>
+    </div>
+    <h2 id="page-title">Cruzada de Jesús Obrador De Milagros</h2>
+    <div id="map"></div>
+    <div id="contact"></div>
+    <div id="info-popup" role="dialog" aria-modal="true" aria-labelledby="info-title" aria-describedby="info-desc">
+      <div class="close-btn" title="Close popup" tabindex="0">&times;</div>
+      <img src="" alt="" id="popup-image" />
+      <div class="info-text">
+        <h3 id="info-title"></h3>
+        <p id="info-desc"></p>
+      </div>
+    </div>
+  </div>
+  <div id="right-panel">
+    <img src="https://i.postimg.cc/L4bjKJj7/image.png" alt="Right Side Default Image" />
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    let currentLang = "es";
+
+    const langToggle = document.getElementById("lang-toggle");
+    const pageTitle = document.getElementById("page-title");
+    const contactDiv = document.getElementById("contact");
+    const infoPopup = document.getElementById('info-popup');
+    const popupImage = document.getElementById('popup-image');
+    const infoTitle = document.getElementById('info-title');
+    const infoDesc = document.getElementById('info-desc');
+    const closeBtn = infoPopup.querySelector('.close-btn');
+
+    const crusades = [
+      { name: { en: "Toa Alta, Puerto Rico", es: "Toa Alta, Puerto Rico" }, coords: [18.37, -66.20], date: { en: "July 11", es: "11 de julio" }, time: "5:00 PM", image: "https://i.postimg.cc/cLZysLS7/image.png" },
+      { name: { en: "Miami, Florida", es: "Miami, Florida" }, coords: [25.77, -80.31], date: { en: "July 12", es: "12 de julio" }, time: "N/A", image: "https://i.postimg.cc/kg7Z0YQf/image.png" },
+      { name: { en: "Spartanburg, South Carolina", es: "Spartanburg, Carolina del Sur" }, coords: [34.95, -81.93], date: { en: "August 2", es: "2 de agosto" }, time: "7:00 AM", image: "https://i.postimg.cc/sXWwQ5PM/image.png" },
+      { name: { en: "Salem, Oregon", es: "Salem, Oregón" }, coords: [44.95, -123.01], date: { en: "August 15", es: "15 de agosto" }, time: "4:00 PM", image: "https://i.postimg.cc/GtrJ4Vhf/image.png" },
+      { name: { en: "Sacramento, California", es: "Sacramento, California" }, coords: [38.61, -121.44], date: { en: "August 22", es: "22 de agosto" }, time: "5:00 PM", image: "https://i.postimg.cc/qqkyJK1V/image.png" },
+      { name: { en: "Cali, Colombia", es: "Cali, Colombia" }, coords: [3.41, -76.55], date: { en: "September 19", es: "19 de septiembre" }, time: "4:00 PM", image: "https://i.postimg.cc/9Q4TQCYM/image.png" }
+    ];
+
+    function updateContactSection() {
+      contactDiv.innerHTML = currentLang === "es" ?
+        `📞 Número de teléfono de la iglesia: <a href="tel:+19135493786">913-549-3786</a><br /><br />Redes Sociales del Pastor Juan Carlos Harrigan:<br /><a href="https://www.youtube.com/@JuanCarlosHarriganOficial" target="_blank">YouTube</a> | <a href="https://www.facebook.com/PastorJuanCarlosHarrigan" target="_blank">Facebook</a> | <a href="https://www.instagram.com/juancarlosharriganoficial/" target="_blank">Instagram</a> | <a href="https://www.tiktok.com/@pastorharriganoficial" target="_blank">TikTok</a>`
+        :
+        `📞 Church phone number: <a href="tel:+19135493786">913-549-3786</a><br /><br />Social Media of Pastor Juan Carlos Harrigan:<br /><a href="https://www.youtube.com/@JuanCarlosHarriganOficial" target="_blank">YouTube</a> | <a href="https://www.facebook.com/PastorJuanCarlosHarrigan" target="_blank">Facebook</a> | <a href="https://www.instagram.com/juancarlosharriganoficial/" target="_blank">Instagram</a> | <a href="https://www.tiktok.com/@pastorharriganoficial" target="_blank">TikTok</a>`;
+    }
+
+    function updateTexts() {
+      pageTitle.textContent = currentLang === "es" ? "Cruzada de Jesús Obrador De Milagros" : "Crusade of Jesus the Miracle Worker";
+      langToggle.textContent = currentLang === "es" ? "Switch to English" : "Cambiar a Español";
+      updateContactSection();
+    }
+
+    function showInfoPopup(c, latlng, index) {
+      popupImage.src = c.image;
+      popupImage.alt = c.name[currentLang];
+      infoTitle.textContent = c.name[currentLang];
+
+      const url = `https://www.google.com/maps/dir/?api=1&origin=${index > 0 ? crusades[index - 1].coords.join(',') : '18.377,-66.200'}&destination=${c.coords.join(',')}&travelmode=driving`;
+      const directionsText = currentLang === "es" ? "Obtener direcciones" : "Get Directions";
+      const labelDate = currentLang === "es" ? "Fecha" : "Date";
+      const labelTime = currentLang === "es" ? "Hora" : "Time";
+
+      infoDesc.innerHTML = `${labelDate}: ${c.date[currentLang]}<br>${labelTime}: ${c.time}<br><a href="${url}" target="_blank" style="color:#1e90ff">${directionsText}</a>`;
+
+      const containerPoint = map.latLngToContainerPoint(latlng);
+      const popupWidth = infoPopup.offsetWidth || 350;
+      const popupHeight = infoPopup.offsetHeight || 150;
+      let left = containerPoint.x + 20;
+      let top = containerPoint.y - popupHeight / 2;
+      top = Math.min(Math.max(top, 10), map.getSize().y - popupHeight - 10);
+      left = Math.min(left, map.getSize().x - popupWidth - 10);
+      infoPopup.style.left = left + "px";
+      infoPopup.style.top = top + "px";
+      infoPopup.classList.add("visible");
+    }
+
+    function hideInfoPopup() { infoPopup.classList.remove("visible"); }
+
+    const map = L.map('map').setView([35, -80], 4);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
+
+    const crossIcon = L.icon({ iconUrl: 'https://i.postimg.cc/MHZpLmp4/271d.png', iconSize: [32, 32], iconAnchor: [16, 32] });
+    crusades.forEach((c, i) => {
+      const marker = L.marker(c.coords, { icon: crossIcon }).addTo(map);
+      marker.on('click', (e) => showInfoPopup(c, e.latlng, i));
+    });
+
+    closeBtn.addEventListener('click', hideInfoPopup);
+    closeBtn.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); hideInfoPopup(); }});
+    map.on('click', () => hideInfoPopup());
+
+    langToggle.addEventListener("click", () => {
+      currentLang = currentLang === "es" ? "en" : "es";
+      updateTexts();
+    });
+
+    updateTexts();
+  </script>
+</body>
+</html>
