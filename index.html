@@ -172,8 +172,8 @@
   </div>
   <div id="right-panel">
     <img src="https://i.postimg.cc/JzmhTjZ9/image.png" alt="Pastor Juan Carlos Harrigan" />
-    <p style="color:#ccc; text-align:center; margin-top:8px; font-size:0.9em;">
-      Campaign Host / Anfitrión de la campaña
+    <p id="campaign-host-text" style="color:#ccc; text-align:center; margin-top:8px; font-size:0.9em;">
+      Anfitrión de la campaña
     </p>
   </div>
 
@@ -189,6 +189,7 @@
     const infoTitle = document.getElementById('info-title');
     const infoDesc = document.getElementById('info-desc');
     const closeBtn = infoPopup.querySelector('.close-btn');
+    const campaignHostText = document.getElementById("campaign-host-text");
 
     const crusades = [
       { name: { en: "Toa Alta, Puerto Rico", es: "Toa Alta, Puerto Rico" }, coords: [18.37, -66.20], date: { en: "July 11", es: "11 de julio" }, time: "5:00 PM", image: "https://i.postimg.cc/cLZysLS7/image.png" },
@@ -210,6 +211,9 @@
       pageTitle.textContent = currentLang === "es" ? "Cruzada de Jesús Obrador De Milagros" : "Crusade of Jesus the Miracle Worker";
       langToggle.textContent = currentLang === "es" ? "Switch to English" : "Cambiar a Español";
       updateContactSection();
+      if (campaignHostText) {
+        campaignHostText.textContent = currentLang === "es" ? "Anfitrión de la campaña" : "Campaign Host";
+      }
     }
 
     function showInfoPopup(c, latlng, index) {
